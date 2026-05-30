@@ -25,6 +25,8 @@ $debug = $false
 ############                      $show_help_Override  [display Show-Help on PowerShell launch]                      ############
 ############                      $timeFilePath_Override                                                             ############
 ############                      $updateInterval_Override                                                           ############
+############                      $autoUpdateProfile_Override [auto-run Update-Profile on launch]                    ############
+############                      $autoUpdatePowerShell_Override [auto-run Update-PowerShell on launch]              ############
 ############                                                                                                         ############
 ############                      THE FOLLOWING FUNCTIONS RESPECT _Override:                                         ############
 ############                      Debug-Message_Override                                                             ############
@@ -82,6 +84,19 @@ if ($updateInterval_Override){
     $updateInterval = $updateInterval_Override
 } else {
     $updateInterval = 7
+}
+
+# Auto-update toggles. Manual Update-Profile and Update-PowerShell still work when these are false.
+if ($null -ne $autoUpdateProfile_Override) {
+    $autoUpdateProfile = [bool]$autoUpdateProfile_Override
+} else {
+    $autoUpdateProfile = $false
+}
+
+if ($null -ne $autoUpdatePowerShell_Override) {
+    $autoUpdatePowerShell = [bool]$autoUpdatePowerShell_Override
+} else {
+    $autoUpdatePowerShell = $false
 }
 
 function Debug-Message{
@@ -174,8 +189,8 @@ function Update-Profile {
     }
 }
 
-# Check if not in debug mode AND (updateInterval is -1 OR file doesn't exist OR time difference is greater than the update interval)
-if (-not $debug -and `
+# Auto-check profile update only when enabled.
+if ($autoUpdateProfile -and -not $debug -and `
     ($updateInterval -eq -1 -or `
             -not (Test-Path $timeFilePath) -or `
             $null -eq $lastExec -or `
@@ -187,6 +202,8 @@ if (-not $debug -and `
 
 } elseif ($debug) {
     Write-Warning "Skipping profile update check in debug mode"
+} elseif (-not $autoUpdateProfile) {
+    Write-Host "Auto profile update is disabled. Run Update-Profile manually when needed." -ForegroundColor DarkGray
 }
 
 function Update-PowerShell {
@@ -219,9 +236,8 @@ function Update-PowerShell {
     }
 }
 
-# skip in debug mode
-# Check if not in debug mode AND (updateInterval is -1 OR file doesn't exist OR time difference is greater than the update interval)
-if (-not $debug -and `
+# Auto-check PowerShell update only when enabled.
+if ($autoUpdatePowerShell -and -not $debug -and `
     ($updateInterval -eq -1 -or `
             -not (Test-Path $timeFilePath) -or `
             $null -eq $lastExec -or `
@@ -232,6 +248,8 @@ if (-not $debug -and `
     $currentTime | Out-File -FilePath $timeFilePath
 } elseif ($debug) {
     Write-Warning "Skipping PowerShell update in debug mode"
+} elseif (-not $autoUpdatePowerShell) {
+    Write-Host "Auto PowerShell update is disabled. Run Update-PowerShell manually when needed." -ForegroundColor DarkGray
 }
 
 function Clear-Cache {
