@@ -202,8 +202,6 @@ if ($autoUpdateProfile -and -not $debug -and `
 
 } elseif ($debug) {
     Write-Warning "Skipping profile update check in debug mode"
-} elseif (-not $autoUpdateProfile) {
-    Write-Host "Auto profile update is disabled. Run Update-Profile manually when needed." -ForegroundColor DarkGray
 }
 
 function Update-PowerShell {
@@ -327,6 +325,12 @@ function Invoke-Profile {
     }
     & $PROFILE
 }
+
+function Restart-Shell {
+    Start-Process pwsh
+    exit
+}
+Set-Alias -Name rsp -Value Restart-Shell
 
 function touch($file) { "" | Out-File $file -Encoding ASCII }
 function ff($name) {
@@ -720,6 +724,7 @@ function Show-Help {
 $($PSStyle.Foreground.Cyan)PowerShell Profile Help$($PSStyle.Reset)
 $($PSStyle.Foreground.Yellow)=======================$($PSStyle.Reset)
 $($PSStyle.Foreground.Green)Edit-Profile$($PSStyle.Reset) - Opens the current user's profile for editing using the configured editor.
+$($PSStyle.Foreground.Green)Restart-Shell / rsp$($PSStyle.Reset) - Restarts the current PowerShell session in a new pwsh process.
 $($PSStyle.Foreground.Green)Update-Profile$($PSStyle.Reset) - Checks for profile updates from a remote repository and updates if necessary.
 $($PSStyle.Foreground.Green)Update-PowerShell$($PSStyle.Reset) - Checks for the latest PowerShell release and updates if a new version is available.
 
