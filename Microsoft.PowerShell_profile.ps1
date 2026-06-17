@@ -332,6 +332,20 @@ function Restart-Shell {
 }
 Set-Alias -Name rsp -Value Restart-Shell
 
+function AVL-Tool {
+    $candidatePaths = @(
+        (Join-Path $PSScriptRoot "Tool\AVL.cmd"),
+        (Join-Path (Get-ProfileDir) "Tool\AVL.cmd")
+    )
+    $avlPath = $candidatePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+    if (-not $avlPath) {
+        Write-Error "AVL.cmd not found. Checked: $($candidatePaths -join '; ')"
+        return
+    }
+    Start-Process wt -ArgumentList @('cmd.exe', '/k', $avlPath)
+}
+Set-Alias -Name avl -Value AVL-Tool
+
 function touch($file) { "" | Out-File $file -Encoding ASCII }
 function ff($name) {
     Get-ChildItem -recurse -filter "*${name}*" -ErrorAction SilentlyContinue | ForEach-Object {
@@ -723,7 +737,9 @@ function Show-Help {
     $helpText = @"
 $($PSStyle.Foreground.Cyan)PowerShell Profile Help$($PSStyle.Reset)
 $($PSStyle.Foreground.Yellow)=======================$($PSStyle.Reset)
+$($PSStyle.Foreground.Green)Clear-Cache$($PSStyle.Reset) - Clears Windows Prefetch, Windows Temp, user Temp, and Internet Explorer cache.
 $($PSStyle.Foreground.Green)Edit-Profile$($PSStyle.Reset) - Opens the current user's profile for editing using the configured editor.
+$($PSStyle.Foreground.Green)AVL-Tool / avl$($PSStyle.Reset) - Opens Tool\AVL.cmd in a new Windows Terminal CMD session.
 $($PSStyle.Foreground.Green)Restart-Shell / rsp$($PSStyle.Reset) - Restarts the current PowerShell session in a new pwsh process.
 $($PSStyle.Foreground.Green)Update-Profile$($PSStyle.Reset) - Checks for profile updates from a remote repository and updates if necessary.
 $($PSStyle.Foreground.Green)Update-PowerShell$($PSStyle.Reset) - Checks for the latest PowerShell release and updates if a new version is available.
