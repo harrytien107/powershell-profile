@@ -667,6 +667,64 @@ function Set-PredictionSource {
 }
 Set-PredictionSource
 
+function Change-theme {
+    $themeApiUrl = "https://api.github.com/repos/JanDeDobbeleer/oh-my-posh/contents/themes"
+    $themeRawBaseUrl = "https://raw.githubusercontent.com/JanDeDobbeleer/oh-my-posh/main/themes"
+    $localThemePath = Join-Path (Get-ProfileDir) "cobalt2.omp.json"
+
+    try {
+        Write-Host "Loading Oh My Posh themes..." -ForegroundColor Cyan
+        $themes = Invoke-RestMethod -Uri $themeApiUrl -Headers @{ "User-Agent" = "PowerShell" } |
+            Where-Object { $_.name -like "*.omp.json" } |
+            Sort-Object name
+
+        if (-not $themes) {
+            Write-Error "No Oh My Posh themes found."
+            return
+        }
+
+        for ($i = 0; $i -lt $themes.Count; $i++) {
+            $themeName = $themes[$i].name -replace "\.omp\.json$", ""
+            Write-Host ("[{0}] {1}" -f ($i + 1), $themeName)
+        }
+
+        $selection = Read-Host "Select theme number, or press Enter to cancel"
+        if ([string]::IsNullOrWhiteSpace($selection)) {
+            Write-Host "Theme change cancelled." -ForegroundColor Yellow
+            return
+        }
+
+        [int]$selectedIndex = 0
+        if (-not [int]::TryParse($selection, [ref]$selectedIndex) -or $selectedIndex -lt 1 -or $selectedIndex -gt $themes.Count) {
+            Write-Error "Invalid theme selection: $selection"
+            return
+        }
+
+        $selectedTheme = $themes[$selectedIndex - 1].name
+        $selectedThemeUrl = "$themeRawBaseUrl/$selectedTheme"
+        Invoke-RestMethod -Uri $selectedThemeUrl -OutFile $localThemePath
+
+        $customProfilePath = Join-Path (Get-ProfileDir) "CTTcustom.ps1"
+        if (Test-Path $customProfilePath) {
+            $customProfileContent = Get-Content -Path $customProfilePath -Raw
+            $newThemeLine = "oh-my-posh init pwsh --config `"$selectedThemeUrl`" | Invoke-Expression"
+            if ($customProfileContent -match '(?m)^\s*oh-my-posh\s+init\s+pwsh\s+--config\s+.+?\|\s*Invoke-Expression\s*$') {
+                $customProfileContent = $customProfileContent -replace '(?m)^\s*oh-my-posh\s+init\s+pwsh\s+--config\s+.+?\|\s*Invoke-Expression\s*$', $newThemeLine
+            } else {
+                $customProfileContent = $customProfileContent.TrimEnd() + [Environment]::NewLine + $newThemeLine + [Environment]::NewLine
+            }
+            Set-Content -Path $customProfilePath -Value $customProfileContent -Encoding UTF8
+            Write-Host "Updated CTTcustom.ps1 theme override." -ForegroundColor Green
+        }
+
+        Write-Host "Theme changed to $($selectedTheme -replace '\.omp\.json$', '')." -ForegroundColor Green
+        Write-Host "Saved local fallback to $localThemePath" -ForegroundColor DarkGray
+        Write-Host "Run Invoke-Profile or Restart-Shell to apply it." -ForegroundColor Cyan
+    } catch {
+        Write-Error "Failed to change Oh My Posh theme. Error: $_"
+    }
+}
+
 # Custom completion for common commands
 $scriptblock = {
     param($wordToComplete, $commandAst, $cursorPosition)
@@ -737,6 +795,7 @@ function Show-Help {
     $helpText = @"
 $($PSStyle.Foreground.Cyan)PowerShell Profile Help$($PSStyle.Reset)
 $($PSStyle.Foreground.Yellow)=======================$($PSStyle.Reset)
+$($PSStyle.Foreground.Green)Change-theme$($PSStyle.Reset) - Lists Oh My Posh themes from GitHub and replaces the current local theme.
 $($PSStyle.Foreground.Green)Clear-Cache$($PSStyle.Reset) - Clears Windows Prefetch, Windows Temp, user Temp, and Internet Explorer cache.
 $($PSStyle.Foreground.Green)Edit-Profile$($PSStyle.Reset) - Opens the current user's profile for editing using the configured editor.
 $($PSStyle.Foreground.Green)AVL-Tool / avl$($PSStyle.Reset) - Opens Tool\AVL.cmd in a new Windows Terminal CMD session.
