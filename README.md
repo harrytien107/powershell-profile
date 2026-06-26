@@ -1,6 +1,6 @@
-# 🎨 PowerShell Profile (Pretty PowerShell)
+# 🎨 PowerShell Profile forked from [Chris Titus Tech's PowerShell Profile](https://github.com/ChrisTitusTech/powershell-profile)
 
-A stylish and functional PowerShell profile that looks and feels almost as good as a Linux terminal.
+A stylish and functional PowerShell profile that looks and feels almost as good as a Linux terminal. And keep all good commands and functions from the old version, but with some customizations from me.
 
 ## ⚡ One Line Install (Elevated PowerShell Recommended)
 

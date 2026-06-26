@@ -606,6 +606,10 @@ function Set-PSReadLineOptionsCompat {
     }
 }
 
+if (Get-Module -ListAvailable -Name CompletionPredictor) {
+    Import-Module CompletionPredictor -ErrorAction SilentlyContinue
+}
+
 # Enhanced PowerShell Experience
 # Enhanced PSReadLine Configuration
 $PSReadLineOptions = @{
